@@ -1,10 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "./database.types";
 
 export async function createClient() {
   const cookieStore = await cookies(); // ヒント: cookies() を await する
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!, // URL環境変数
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // ANON KEY環境変数
     {
