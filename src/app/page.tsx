@@ -2,7 +2,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { todayInTokyo } from "@/lib/date";
 import { signOut } from "./login/actions";
-import { createJournal } from "./actions";
+import { createJournal, requestCorrection } from "./actions";
+import { CorrectButton } from "./correct-button";
+
+// AI添削はServer Actionの中で数十秒かかることがあるため、ページ単位で制限時間を延ばす
+export const maxDuration = 60;
 
 export default async function Home({
   searchParams,
@@ -21,7 +25,9 @@ export default async function Home({
   // RLS により、取得できるのは自分のジャーナルだけ
   const { data: journals } = await supabase
     .from("journals")
-    .select("id, journal_date, original_text")
+    .select(
+      "id, journal_date, original_text, corrected_text, phrases(id, phrase, meaning)"
+    )
     .order("journal_date", { ascending: false });
 
   const today = todayInTokyo();
@@ -77,6 +83,37 @@ export default async function Home({
               <li key={j.id} className="rounded border border-zinc-200 p-4">
                 <p className="mb-2 text-sm text-zinc-500">{j.journal_date}</p>
                 <p className="whitespace-pre-wrap">{j.original_text}</p>
+
+                {j.corrected_text === null ? (
+                  <form action={requestCorrection} className="mt-3 flex flex-col">
+                    <input type="hidden" name="journal_id" value={j.id} />
+                    <CorrectButton />
+                  </form>
+                ) : (
+                  <div className="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-3">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-zinc-500">
+                        添削後
+                      </p>
+                      <p className="whitespace-pre-wrap">{j.corrected_text}</p>
+                    </div>
+                    {j.phrases.length > 0 && (
+                      <div>
+                        <p className="mb-1 text-sm font-medium text-zinc-500">
+                          覚えるフレーズ
+                        </p>
+                        <ul className="flex flex-col gap-1 text-sm">
+                          {j.phrases.map((p) => (
+                            <li key={p.id}>
+                              <span className="font-medium">{p.phrase}</span>
+                              <span className="text-zinc-600"> — {p.meaning}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
