@@ -14,14 +14,6 @@ function redirectWithError(message: string): never {
   redirect(`/login?error=${encodeURIComponent(message)}`);
 }
 
-export async function signUp(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp(readCredentials(formData));
-
-  if (error) redirectWithError(error.message);
-  redirect("/");
-}
-
 export async function signIn(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(

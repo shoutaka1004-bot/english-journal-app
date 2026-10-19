@@ -1,4 +1,4 @@
-import { signIn, signUp } from "./actions";
+import { signIn } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -9,7 +9,7 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">ログイン / 新規登録</h1>
+      <h1 className="text-2xl font-semibold">ログイン</h1>
 
       {error && (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -39,20 +39,12 @@ export default async function LoginPage({
             className="rounded border border-zinc-300 px-3 py-2 text-base"
           />
         </label>
-        <div className="flex gap-3">
-          <button
-            formAction={signIn}
-            className="flex-1 rounded bg-foreground px-4 py-2 text-background"
-          >
-            ログイン
-          </button>
-          <button
-            formAction={signUp}
-            className="flex-1 rounded border border-zinc-300 px-4 py-2"
-          >
-            新規登録
-          </button>
-        </div>
+        <button
+          formAction={signIn}
+          className="rounded bg-foreground px-4 py-2 text-background"
+        >
+          ログイン
+        </button>
       </form>
     </main>
   );
