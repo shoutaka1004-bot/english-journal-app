@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI英語ジャーナル ＆ 実戦フレーズ復習アプリ
 
-## Getting Started
+英語で日記を書くと、AI(Claude)が添削し、覚えるべきフレーズを抜き出して保存します。保存したフレーズは、10問形式のテストで復習できます。
 
-First, run the development server:
+- **デモ**: https://english-journal-app-9u55.vercel.app
+- **デモ用アカウント**: `aaa@aaa` / `aaaaaa`
+  - 費用保護のため新規登録は停止しています。デモ用アカウントは共有なので、個人的な内容は書かないでください。
+
+## 機能
+
+- **ジャーナル**: 1日1件まで。書いた本人だけが閲覧できる
+- **AI添削**: 1つのジャーナルに1回。添削後の文と、覚えるフレーズ(最大5個、意味は日本語)を保存する
+- **フレーズテスト**: 10問。答えを見て、自己採点で「できた / できなかった」を記録する。結果画面で間違えたフレーズを確認できる
+
+## 技術スタック
+
+Next.js (App Router, TypeScript) / Tailwind CSS / Supabase (Postgres, Auth, RLS) / Anthropic API / Vercel
+
+## 設計のポイント
+
+### 1. RLS(行レベルセキュリティ)でデータを守る
+
+4つのテーブル(journals, phrases, reviews, journal_messages)すべてで RLS を有効にし、`user_id = auth.uid()` の行だけ読み書きできるようにしています。アプリ側のチェックに頼らず、DB 側で他人のデータを守ります。
+
+- ジャーナルは更新のみ許可(添削結果の保存のため)。フレーズ・復習履歴・メッセージは追記のみで、更新や削除は許可していません
+- ビュー(`phrase_progress`)は `security_invoker = true` にして、ビュー経由でも RLS が効くようにしています
+
+### 2. 「1日1件」「1回だけ添削」を DB とサーバーで保証する
+
+- `unique (user_id, journal_date)` の制約で、1日1件を DB が保証します
+- 添削は `corrected_text` が null の時だけ受け付けます。更新も `corrected_text is null` を条件にするため、連打しても二重に実行されません
+- この2つで、API の費用が際限なく増えない構造になっています
+
+### 3. セット方式の復習アルゴリズム
+
+- フレーズを作成順に30個ずつの「セット」に分けます
+- 直近2回の復習がどちらも正解なら「クリア済み」とみなします
+- 最初のクリアしていないセットから、最後に復習した日時が一番古いフレーズを出題します
+- 20%の確率で、クリア済みのセットから復習用に出題します
+- 集計は SQL のビュー(`phrase_progress`)で行います。復習履歴が増えても、PostgREST の1000行の上限に当たりません
+
+### 4. 入力は信用しない
+
+- `user_id` と日付はフォームから受け取らず、サーバー側で決めます
+- テストの回答時は、RLS を通した検索で自分のフレーズかを確認してから保存します
+- テストの進行状況は URL に持たせるため、値は範囲内に丸め、UUID の形式を検証します
+- AI へのプロンプトでは、ジャーナル本文を `<journal>` タグで囲み、「データとして扱う」と指示しています(プロンプトインジェクション対策)
+
+### 5. 費用保護
+
+- 新規登録を停止し、アカウントは自分用とデモ用のみにしています
+- 上記の「1日1件・添削1回」の制約により、1アカウントあたりの添削は最大で1日1回です
+- Anthropic 側にも月間の利用上限を設定しています
+
+## ローカルでの動かし方
 
 ```bash
+npm install
+# .env.local を作り、下記の環境変数を設定する
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local` に必要な環境変数:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| 変数 | 内容 |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクトの URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の公開用(anon)キー |
+| `ANTHROPIC_API_KEY` | Anthropic の API キー(サーバー専用。`NEXT_PUBLIC_` を付けない) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+DB のスキーマは [supabase/migrations/](supabase/migrations/) にあります。
 
-## Learn More
+## 既知の課題
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 添削結果の保存とフレーズの保存が、同じトランザクションになっていない
+- マイグレーションを SQL エディタで手動適用しているため、Supabase 側のマイグレーション履歴が空
+- `journal_messages`(添削時に意図を確認するチャット用)は、テーブルのみで画面は未実装
