@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { todayInTokyo } from "@/lib/date";
@@ -40,11 +41,19 @@ export default async function Home({
           <h1 className="text-2xl font-semibold">English Journal</h1>
           <p className="text-sm text-zinc-600">ログイン中: {user.email}</p>
         </div>
-        <form action={signOut}>
-          <button className="rounded border border-zinc-300 px-3 py-1.5 text-sm">
-            ログアウト
-          </button>
-        </form>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/review"
+            className="rounded bg-foreground px-3 py-1.5 text-sm text-background"
+          >
+            フレーズテスト
+          </Link>
+          <form action={signOut}>
+            <button className="rounded border border-zinc-300 px-3 py-1.5 text-sm">
+              ログアウト
+            </button>
+          </form>
+        </div>
       </header>
 
       {error && (
@@ -56,7 +65,7 @@ export default async function Home({
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">今日のジャーナル ({today})</h2>
         {hasWrittenToday ? (
-          <p className="rounded bg-zinc-100 px-3 py-4 text-sm text-zinc-700">
+          <p className="rounded bg-zinc-100 px-3 py-4 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
             今日は書きました。また明日。
           </p>
         ) : (

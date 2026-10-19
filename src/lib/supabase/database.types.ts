@@ -75,6 +75,7 @@ export type Database = {
       }
       phrases: {
         Row: {
+          created_at: string
           id: string
           journal_id: string
           meaning: string
@@ -82,6 +83,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
           journal_id: string
           meaning: string
@@ -89,6 +91,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           journal_id?: string
           meaning?: string
@@ -132,6 +135,13 @@ export type Database = {
             foreignKeyName: "reviews_phrase_id_fkey"
             columns: ["phrase_id"]
             isOneToOne: false
+            referencedRelation: "phrase_progress"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
             referencedRelation: "phrases"
             referencedColumns: ["id"]
           },
@@ -139,7 +149,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      phrase_progress: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_cleared: boolean | null
+          last_reviewed_at: string | null
+          meaning: string | null
+          phrase: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
