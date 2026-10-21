@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { todayInTokyo } from "@/lib/date";
 import { signOut } from "./login/actions";
 import { createJournal, requestCorrection } from "./actions";
+import { AnswerForm } from "./answer-form";
 import { CorrectButton } from "./correct-button";
 
 // AI添削はServer Actionの中で数十秒かかることがあるため、ページ単位で制限時間を延ばす
@@ -27,7 +28,7 @@ export default async function Home({
   const { data: journals } = await supabase
     .from("journals")
     .select(
-      "id, journal_date, original_text, corrected_text, phrases(id, phrase, meaning)"
+      "id, journal_date, original_text, corrected_text, phrases(id, phrase, meaning), journal_messages(speaker, content)"
     )
     .order("journal_date", { ascending: false });
 
@@ -88,16 +89,41 @@ export default async function Home({
         <h2 className="text-lg font-semibold">これまでのジャーナル</h2>
         {journals && journals.length > 0 ? (
           <ul className="flex flex-col gap-4">
-            {journals.map((j) => (
+            {journals.map((j) => {
+              const question = j.journal_messages.find((m) => m.speaker === "ai");
+              const answer = j.journal_messages.find((m) => m.speaker === "user");
+
+              return (
               <li key={j.id} className="card">
                 <p className="mb-2 text-sm text-muted">{j.journal_date}</p>
                 <p className="english">{j.original_text}</p>
 
+                {question && (
+                  <div className="mt-4 flex flex-col gap-2 border-t border-border pt-3">
+                    <p className="text-sm font-medium text-accent">
+                      AIからの確認
+                    </p>
+                    <p className="whitespace-pre-wrap text-sm">{question.content}</p>
+                    {answer && (
+                      <>
+                        <p className="text-sm font-medium text-accent">あなたの回答</p>
+                        <p className="whitespace-pre-wrap text-sm">{answer.content}</p>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {j.corrected_text === null ? (
-                  <form action={requestCorrection} className="mt-3 flex flex-col">
-                    <input type="hidden" name="journal_id" value={j.id} />
-                    <CorrectButton />
-                  </form>
+                  question && !answer ? (
+                    <div className="mt-3">
+                      <AnswerForm journalId={j.id} />
+                    </div>
+                  ) : (
+                    <form action={requestCorrection} className="mt-3 flex flex-col">
+                      <input type="hidden" name="journal_id" value={j.id} />
+                      <CorrectButton />
+                    </form>
+                  )
                 ) : (
                   <div className="mt-4 flex flex-col gap-3 border-t border-border pt-3">
                     <div>
@@ -124,7 +150,8 @@ export default async function Home({
                   </div>
                 )}
               </li>
-            ))}
+              );
+            })}
           </ul>
         ) : (
           <p className="notice">まだありません。</p>
