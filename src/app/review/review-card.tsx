@@ -13,7 +13,7 @@ function ResultButtons() {
         name="result"
         value="correct"
         disabled={pending}
-        className="flex-1 rounded bg-foreground px-4 py-2 text-background disabled:opacity-50"
+        className="btn-primary flex-1"
       >
         合っていた
       </button>
@@ -21,7 +21,7 @@ function ResultButtons() {
         name="result"
         value="wrong"
         disabled={pending}
-        className="flex-1 rounded border border-zinc-300 px-4 py-2 disabled:opacity-50"
+        className="btn-secondary flex-1"
       >
         違った
       </button>
@@ -43,9 +43,9 @@ export function ReviewCard({
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4 rounded border border-zinc-200 p-6">
+    <div className="card flex flex-col gap-4">
       <div>
-        <p className="mb-1 text-sm text-zinc-500">この意味の英語フレーズは？</p>
+        <p className="mb-1 text-sm text-muted">この意味の英語フレーズは？</p>
         <p className="text-xl">{meaning}</p>
       </div>
 
@@ -55,7 +55,7 @@ export function ReviewCard({
           <input type="hidden" name="q" value={session.q} />
           <input type="hidden" name="ok" value={session.ok} />
           <input type="hidden" name="ng" value={session.ng.join(",")} />
-          <p className="rounded bg-zinc-100 px-3 py-3 text-xl font-medium dark:bg-zinc-800">
+          <p className="rounded-lg bg-sunken px-4 py-3 font-serif text-2xl font-medium">
             {phrase}
           </p>
           <ResultButtons />
@@ -64,7 +64,7 @@ export function ReviewCard({
         <button
           type="button"
           onClick={() => setRevealed(true)}
-          className="self-start rounded border border-zinc-300 px-4 py-2"
+          className="btn-secondary self-start"
         >
           答えを見る
         </button>

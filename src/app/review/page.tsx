@@ -56,33 +56,33 @@ export default async function ReviewPage({
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-12">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">フレーズテスト</h1>
-        <Link href="/" className="text-sm text-zinc-600 underline">
+        <Link href="/" className="text-sm text-muted underline">
           ジャーナルへ戻る
         </Link>
       </header>
 
       {params.error && (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="alert-error">
           {params.error}
         </p>
       )}
 
       {!pick ? (
-        <p className="rounded bg-zinc-100 px-3 py-4 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+        <p className="notice">
           テストするフレーズがまだありません。ジャーナルを書いて添削すると、フレーズが増えます。
         </p>
       ) : !session ? (
-        <section className="flex flex-col gap-4 rounded border border-zinc-200 p-6">
+        <section className="card flex flex-col gap-4">
           <p>
             全 {SESSION_LENGTH} 問。意味を見て、英語のフレーズを思い出してください。
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted">
             今のセット {pick.setNumber}: クリア {pick.setProgress.cleared} /{" "}
             {pick.setProgress.total}
           </p>
           <Link
             href={`/review?${toQuery({ q: 1, ok: 0, ng: [] })}`}
-            className="self-start rounded bg-foreground px-5 py-2 text-background"
+            className="btn-primary self-start"
           >
             テストを始める
           </Link>
@@ -94,23 +94,23 @@ export default async function ReviewPage({
               <span className="font-medium">
                 第 {session.q} 問 / {SESSION_LENGTH}
               </span>
-              <Link href="/review" className="text-zinc-600 underline">
+              <Link href="/review" className="text-muted underline">
                 中断する
               </Link>
             </div>
             <div
-              className="h-2 w-full overflow-hidden rounded bg-zinc-200 dark:bg-zinc-800"
+              className="h-2 w-full overflow-hidden rounded-full bg-sunken"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={SESSION_LENGTH}
               aria-valuenow={session.q - 1}
             >
               <div
-                className="h-full bg-foreground"
+                className="h-full rounded-full bg-accent transition-all"
                 style={{ width: `${((session.q - 1) / SESSION_LENGTH) * 100}%` }}
               />
             </div>
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-muted">
               セット {pick.setNumber}: クリア {pick.setProgress.cleared} /{" "}
               {pick.setProgress.total} {KIND_LABEL[pick.kind]}
             </p>

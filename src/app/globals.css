@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
+/* 色はここだけで決める。画面側は bg-surface / text-muted のように名前で使う */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f4;
+  --foreground: #1f1d1a;
+  --surface: #ffffff;
+  --surface-sunken: #f1ede5;
+  --border: #e6e0d5;
+  --muted: #6b655b;
+  --accent: #4f46e5;
+  --accent-foreground: #ffffff;
+  --ok: #15803d;
+  --ok-bg: #e7f5ec;
+  --ng: #b42318;
+  --ng-bg: #fdeceb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141412;
+    --foreground: #ece8e0;
+    --surface: #1d1c19;
+    --surface-sunken: #272521;
+    --border: #38352f;
+    --muted: #a39d92;
+    --accent: #8b87f5;
+    --accent-foreground: #14132b;
+    --ok: #6fd392;
+    --ok-bg: #12301f;
+    --ng: #ff9b92;
+    --ng-bg: #3a1a17;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-ng: var(--ng);
+  --color-ng-bg: var(--ng-bg);
+  --font-sans: var(--font-geist-sans), "Hiragino Sans", "Yu Gothic UI", Meiryo,
+    sans-serif;
+  --font-serif: var(--font-lora), "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.7;
+}
+
+/* 画面で共通して使う部品 */
+@layer components {
+  .card {
+    @apply rounded-xl border border-border bg-surface p-5 shadow-sm;
+  }
+
+  /* v4 では自作クラスを @apply で取り込めないため、共通部分を両方に書く */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2
+      text-sm font-medium text-accent-foreground transition duration-100
+      hover:opacity-85 active:scale-95 active:opacity-70 disabled:opacity-50
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-border
+      bg-surface px-4 py-2 text-sm font-medium text-foreground transition duration-100
+      hover:bg-sunken active:scale-95 active:bg-sunken active:opacity-70 disabled:opacity-50
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-base
+      outline-none focus:border-accent focus:ring-2 focus:ring-accent/30;
+  }
+
+  .alert-error {
+    @apply rounded-lg bg-ng-bg px-3 py-2 text-sm text-ng;
+  }
+  .notice {
+    @apply rounded-lg bg-sunken px-4 py-3 text-sm text-muted;
+  }
+
+  /* 英文は読みやすい明朝系で表示する */
+  .english {
+    @apply whitespace-pre-wrap font-serif text-lg leading-8;
+  }
 }

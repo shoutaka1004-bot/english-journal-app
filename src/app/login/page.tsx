@@ -9,15 +9,18 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">ログイン</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">English Journal</h1>
+        <p className="text-sm text-muted">英語で書いて、AIに添削してもらう</p>
+      </div>
 
       {error && (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="alert-error">
           {error}
         </p>
       )}
 
-      <form className="flex flex-col gap-4">
+      <form className="card flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
           メールアドレス
           <input
@@ -25,7 +28,7 @@ export default async function LoginPage({
             type="email"
             required
             autoComplete="email"
-            className="rounded border border-zinc-300 px-3 py-2 text-base"
+            className="field"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -36,12 +39,12 @@ export default async function LoginPage({
             required
             minLength={6}
             autoComplete="current-password"
-            className="rounded border border-zinc-300 px-3 py-2 text-base"
+            className="field"
           />
         </label>
         <button
           formAction={signIn}
-          className="rounded bg-foreground px-4 py-2 text-background"
+          className="btn-primary"
         >
           ログイン
         </button>

@@ -39,17 +39,17 @@ export default async function Home({
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">English Journal</h1>
-          <p className="text-sm text-zinc-600">ログイン中: {user.email}</p>
+          <p className="text-sm text-muted">ログイン中: {user.email}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/review"
-            className="rounded bg-foreground px-3 py-1.5 text-sm text-background"
+            className="btn-primary"
           >
             フレーズテスト
           </Link>
           <form action={signOut}>
-            <button className="rounded border border-zinc-300 px-3 py-1.5 text-sm">
+            <button className="btn-secondary">
               ログアウト
             </button>
           </form>
@@ -57,7 +57,7 @@ export default async function Home({
       </header>
 
       {error && (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="alert-error">
           {error}
         </p>
       )}
@@ -65,7 +65,7 @@ export default async function Home({
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">今日のジャーナル ({today})</h2>
         {hasWrittenToday ? (
-          <p className="rounded bg-zinc-100 px-3 py-4 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+          <p className="notice">
             今日は書きました。また明日。
           </p>
         ) : (
@@ -75,9 +75,9 @@ export default async function Home({
               required
               rows={8}
               placeholder="Write about your day in English..."
-              className="rounded border border-zinc-300 px-3 py-2 text-base"
+              className="field english"
             />
-            <button className="self-start rounded bg-foreground px-4 py-2 text-background">
+            <button className="btn-primary self-start">
               保存する
             </button>
           </form>
@@ -89,9 +89,9 @@ export default async function Home({
         {journals && journals.length > 0 ? (
           <ul className="flex flex-col gap-4">
             {journals.map((j) => (
-              <li key={j.id} className="rounded border border-zinc-200 p-4">
-                <p className="mb-2 text-sm text-zinc-500">{j.journal_date}</p>
-                <p className="whitespace-pre-wrap">{j.original_text}</p>
+              <li key={j.id} className="card">
+                <p className="mb-2 text-sm text-muted">{j.journal_date}</p>
+                <p className="english">{j.original_text}</p>
 
                 {j.corrected_text === null ? (
                   <form action={requestCorrection} className="mt-3 flex flex-col">
@@ -99,23 +99,23 @@ export default async function Home({
                     <CorrectButton />
                   </form>
                 ) : (
-                  <div className="mt-4 flex flex-col gap-3 border-t border-zinc-200 pt-3">
+                  <div className="mt-4 flex flex-col gap-3 border-t border-border pt-3">
                     <div>
-                      <p className="mb-1 text-sm font-medium text-zinc-500">
+                      <p className="mb-1 text-sm font-medium text-accent">
                         添削後
                       </p>
-                      <p className="whitespace-pre-wrap">{j.corrected_text}</p>
+                      <p className="english">{j.corrected_text}</p>
                     </div>
                     {j.phrases.length > 0 && (
                       <div>
-                        <p className="mb-1 text-sm font-medium text-zinc-500">
+                        <p className="mb-1 text-sm font-medium text-accent">
                           覚えるフレーズ
                         </p>
                         <ul className="flex flex-col gap-1 text-sm">
                           {j.phrases.map((p) => (
                             <li key={p.id}>
-                              <span className="font-medium">{p.phrase}</span>
-                              <span className="text-zinc-600"> — {p.meaning}</span>
+                              <span className="font-serif text-base font-medium">{p.phrase}</span>
+                              <span className="text-muted"> — {p.meaning}</span>
                             </li>
                           ))}
                         </ul>
@@ -127,7 +127,7 @@ export default async function Home({
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-zinc-500">まだありません。</p>
+          <p className="notice">まだありません。</p>
         )}
       </section>
     </main>
