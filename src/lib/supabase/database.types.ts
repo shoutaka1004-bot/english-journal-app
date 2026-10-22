@@ -163,7 +163,14 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      save_correction: {
+        Args: {
+          p_corrected_text: string
+          p_journal_id: string
+          p_phrases: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
