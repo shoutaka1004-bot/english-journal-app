@@ -25,6 +25,7 @@ Next.js (App Router, TypeScript) / Tailwind CSS / Supabase (Postgres, Auth, RLS)
 
 - ジャーナルは更新のみ許可(添削結果の保存のため)。フレーズ・復習履歴・メッセージは追記のみで、更新や削除は許可していません
 - ビュー(`phrase_progress`)は `security_invoker = true` にして、ビュー経由でも RLS が効くようにしています
+- 添削結果の保存は DB 関数(`save_correction`)にまとめ、添削後の文とフレーズを1つのトランザクションで保存します。途中で失敗しても全部が取り消され、やり直せます。関数も `security invoker` にして RLS を効かせ、`user_id` は引数ではなく `auth.uid()` から取っています
 
 ### 2. 「1日1件」「1回だけ添削」を DB とサーバーで保証する
 
@@ -74,6 +75,5 @@ DB のスキーマは [supabase/migrations/](supabase/migrations/) にありま�
 
 ## 既知の課題
 
-- 添削結果の保存とフレーズの保存が、同じトランザクションになっていない
 - マイグレーションを SQL エディタで手動適用しているため、Supabase 側のマイグレーション履歴が空
 - 意図確認チャットは1往復まで(複数往復にするには、一意制約の見直しが必要)
