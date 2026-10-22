@@ -88,7 +88,6 @@ async function loadOwnJournal(journalId: string) {
 // 添削をAIに依頼し、結果(添削後の文とフレーズ)を保存してホームへ戻る
 async function runCorrection(
   supabase: Supabase,
-  userId: string,
   journal: { id: string; original_text: string },
   clarification?: Clarification
 ): Promise<never> {
@@ -100,28 +99,17 @@ async function runCorrection(
     redirectWithError("添削に失敗しました。もう一度お試しください");
   }
 
-  // corrected_text が NULL の行だけ更新する(連打しても1回しか通らない)
-  const { data: updated, error: updateError } = await supabase
-    .from("journals")
-    .update({ corrected_text: correction.corrected_text })
-    .eq("id", journal.id)
-    .is("corrected_text", null)
-    .select("id");
-
-  if (updateError || !updated || updated.length === 0) {
-    redirectWithError("添削結果の保存に失敗しました");
-  }
-
-  if (correction.phrases.length > 0) {
-    const { error: phrasesError } = await supabase.from("phrases").insert(
-      correction.phrases.map((p) => ({
-        user_id: userId,
-        journal_id: journal.id,
-        phrase: p.phrase,
-        meaning: p.meaning,
-      }))
-    );
-    if (phrasesError) redirectWithError("フレーズの保存に失敗しました");
+  // 添削後の文とフレーズを、DB関数の中で1つのトランザクションとして保存する。
+  // 途中で失敗すると全部取り消され、corrected_text は null のまま(やり直せる)。
+  // 添削済みの場合も関数が例外を出すので、連打しても1回しか通らない。
+  const { error } = await supabase.rpc("save_correction", {
+    p_journal_id: journal.id,
+    p_corrected_text: correction.corrected_text,
+    p_phrases: correction.phrases,
+  });
+  if (error) {
+    console.error("save_correction failed:", error);
+    redirectWithError("添削結果の保存に失敗しました。もう一度お試しください");
   }
 
   redirect("/");
@@ -140,7 +128,7 @@ export async function requestCorrection(formData: FormData) {
 
   if (question && answer) {
     // 回答の保存後に添削が失敗していた場合の再実行
-    await runCorrection(supabase, user.id, journal, {
+    await runCorrection(supabase, journal, {
       questions: question.content,
       answer: answer.content,
     });
@@ -156,7 +144,7 @@ export async function requestCorrection(formData: FormData) {
 
   // 質問が不要なら、そのまま添削する
   if (questions.length === 0) {
-    await runCorrection(supabase, user.id, journal);
+    await runCorrection(supabase, journal);
   }
 
   // (journal_id, speaker) の一意制約により、質問は1件しか保存できない
@@ -195,7 +183,7 @@ export async function submitAnswer(formData: FormData) {
   });
   if (error) redirectWithError("回答の保存に失敗しました");
 
-  await runCorrection(supabase, user.id, journal, {
+  await runCorrection(supabase, journal, {
     questions: question.content,
     answer: answerText,
   });
