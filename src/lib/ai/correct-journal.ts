@@ -42,19 +42,31 @@ const QUESTIONS_PROMPT = `You are an English teacher helping a Japanese learner.
 // サーバー専用。ANTHROPIC_API_KEY は環境変数から自動で読まれる。
 const client = new Anthropic();
 
+// AI呼び出しの所要時間をログに出す(Vercelの実行時間上限に収まるかの確認用)
+async function timed<T>(label: string, run: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  try {
+    return await run();
+  } finally {
+    console.log(`[ai] ${label}: ${Date.now() - start}ms`);
+  }
+}
+
 function journalBlock(originalText: string) {
   return `<journal>\n${originalText}\n</journal>`;
 }
 
 // 意図が不明な点があれば質問を返す。十分に明確なら空の配列を返す
 export async function askQuestions(originalText: string): Promise<string[]> {
-  const response = await client.messages.parse({
-    model: "claude-opus-5-5",
-    max_tokens: 2000,
-    system: QUESTIONS_PROMPT,
-    messages: [{ role: "user", content: journalBlock(originalText) }],
-    output_config: { format: zodOutputFormat(QuestionsSchema) },
-  });
+  const response = await timed("askQuestions", () =>
+    client.messages.parse({
+      model: "claude-opus-5-5",
+      max_tokens: 2000,
+      system: QUESTIONS_PROMPT,
+      messages: [{ role: "user", content: journalBlock(originalText) }],
+      output_config: { format: zodOutputFormat(QuestionsSchema) },
+    })
+  );
 
   if (response.stop_reason === "refusal" || !response.parsed_output) {
     throw new Error("AIから有効な質問を得られませんでした");
@@ -74,13 +86,15 @@ export async function correctJournal(
     ? `${journalBlock(originalText)}\n<clarification>\n<questions>\n${clarification.questions}\n</questions>\n<answer>\n${clarification.answer}\n</answer>\n</clarification>`
     : journalBlock(originalText);
 
-  const response = await client.messages.parse({
-    model: "claude-opus-5-5",
-    max_tokens: 8000,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content }],
-    output_config: { format: zodOutputFormat(CorrectionSchema) },
-  });
+  const response = await timed("correctJournal", () =>
+    client.messages.parse({
+      model: "claude-opus-5-5",
+      max_tokens: 8000,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content }],
+      output_config: { format: zodOutputFormat(CorrectionSchema) },
+    })
+  );
 
   if (response.stop_reason === "refusal" || !response.parsed_output) {
     throw new Error("AIから有効な添削結果を得られませんでした");
